@@ -50,6 +50,7 @@ Price:    ${TransactionPrice}`,
 
 
 async function magiceEdenResponse(wallet_id,childkey){
+    try {
     const url = `https://api-mainnet.magiceden.dev/v2/wallets/${wallet_id}/activities?offset=0&limit=100`;
     const response = await axios.get(url);
     let  userdata_json1 = response
@@ -81,14 +82,17 @@ async function magiceEdenResponse(wallet_id,childkey){
       }).catch((error) => {
         console.error(error);
       });
-      
+    }catch(error){
+        console.log(error)
+    }
    
 }
 
 async function Mointoriamolo(){
+    try{
     const db = getDatabase();
         const users12 = ref(db, 'magice' );
-        onValue(users12, (snapshot) => {
+        get(users12, (snapshot) => {
           snapshot.forEach(async (childSnapshot) => {
             const childKey = childSnapshot.key;
             const childData = childSnapshot.val();
@@ -97,7 +101,7 @@ async function Mointoriamolo(){
             const diffInMs = Math.abs(t2- t1);
             let d1 = diffInMs/(1000 * 60 * 60 * 24);
             if (d1 >=1){
-              remove(ref(db, 'magice/' + childKey))
+              await remove(ref(db, 'magice/' + childKey))
             }
             else{
                await magiceEdenResponse(childData.wallet_id,childKey);  
@@ -109,6 +113,9 @@ async function Mointoriamolo(){
         }
         
         )
+    }catch(err){
+        console.log(err)
+    }
          
   }
   
