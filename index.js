@@ -98,7 +98,8 @@ async function Mointoriamolo(){
     try{
     const db = getDatabase();
         const users12 = ref(db, 'magice' );
-        get(users12, (snapshot) => {
+       
+        onValue(users12, (snapshot) => {
           snapshot.forEach(async (childSnapshot) => {
             const childKey = childSnapshot.key;
             const childData = childSnapshot.val();
@@ -106,6 +107,7 @@ async function Mointoriamolo(){
             let t2 = new Date()
             const diffInMs = Math.abs(t2- t1);
             let d1 = diffInMs/(1000 * 60 * 60 * 24);
+            console.log(d1)
             if (d1 >=1){
               await remove(ref(db, 'magice/' + childKey))
             }
@@ -126,7 +128,7 @@ async function Mointoriamolo(){
   }
   
 
-const interval_calling = setInterval(Mointoriamolo,60000)
+const interval_calling = setInterval(Mointoriamolo,50000)
 
 const port = 5000
 app.listen(port, () => {
