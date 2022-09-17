@@ -69,7 +69,6 @@ async function magiceEdenResponse(wallet_id,childkey){
           const imageurl  = snapshot.val().imageurl;
           const whatsapp =snapshot.val().whatsapp.replace(/\s+/g,"");
           const walletName = snapshot.val().walletName
-          console.log(image)
           if(imageurl != image){       
             await update(ref(db, 'magice/' + childkey ) ,{imageurl :image});
             await sendMessage(whatsapp,walletName,TransactionType,TransactionPrice,TransactionCollection,image);
@@ -96,7 +95,6 @@ async function Mointoriamolo(){
             let t1 = new Date(childData.createdDate)
             let t2 = new Date()
             const diffInMs = Math.abs(t2- t1);
-            console.log(t2)
             let d1 = diffInMs/(1000 * 60 * 60 * 24);
             if (d1 >=1){
               remove(ref(db, 'magice/' + childKey))
