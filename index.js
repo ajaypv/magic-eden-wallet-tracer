@@ -32,6 +32,7 @@ signInWithEmailAndPassword(auth, "namesujiserver@gmail.com", "namekuji")
 });
 
 async function sendMessage(WhatsappNumber,walletName,TransactionType,TransactionPrice,TransactionCollection,image){
+    try{
     client.messages 
       .create({ 
          body:`
@@ -45,6 +46,11 @@ Price:    ${TransactionPrice}`,
        }) 
       .then(message => console.log(message.sid)) 
       .done();
+
+    }catch(error){
+        console.log(error)
+
+    }
     
 }
 
