@@ -1,7 +1,7 @@
 import axios from "axios";
 import express from "express";
 import { initializeApp } from "firebase/app";
-import { getDatabase, ref, set ,  onValue,update, remove,} from "firebase/database"; 
+import { getDatabase, ref, set , get, onValue,update, remove,} from "firebase/database"; 
 import { getAuth, signInWithEmailAndPassword} from "firebase/auth";
 import dotenv from 'dotenv'
 import twilio from 'twilio'
@@ -31,6 +31,60 @@ signInWithEmailAndPassword(auth, "namesujiserver@gmail.com", "namekuji")
 .catch((error) => {
 });
 
+async function sendMessage(WhatsappNumber,walletName,TransactionType,TransactionPrice,TransactionCollection,image){
+    client.messages 
+      .create({ 
+         body:`
+Wallet :   ${walletName}
+Activity Type:  ${TransactionType}
+Collection:   ${TransactionCollection}
+Price:    ${TransactionPrice}`, 
+         from: 'whatsapp:+16184271719',       
+         to: `whatsapp:${WhatsappNumber}` ,
+         mediaUrl :image, 
+       }) 
+      .then(message => console.log(message.sid)) 
+      .done();
+    
+}
+
+
+async function magiceEdenResponse(wallet_id,childkey){
+    const url = `https://api-mainnet.magiceden.dev/v2/wallets/${wallet_id}/activities?offset=0&limit=100`;
+    const response = await axios.get(url);
+    let  userdata_json1 = response
+    let  token = userdata_json1.data[0]["tokenMint"]
+    let  TransactionType = userdata_json1.data[0]["type"];
+    let  TransactionCollection = userdata_json1.data[0]["collection"];
+    let  TransactionPrice = userdata_json1.data[0]["price"];
+    const tokens = `https://api.solscan.io/account?address=${token}`;
+    const resp = await axios.get(tokens);
+    const  res2 = resp.data.data.metadata.data.uri
+    const response33 = await axios.get(res2);
+    let image = response33.data.image
+    const db = getDatabase();
+
+    get(ref(db, 'magice/' + childkey )).then(async (snapshot) => {
+        if (snapshot.exists()) {
+          const imageurl  = snapshot.val().imageurl;
+          const whatsapp =snapshot.val().whatsapp.replace(/\s+/g,"");
+          const walletName = snapshot.val().walletName
+          console.log(image)
+          if(imageurl != image){       
+            await update(ref(db, 'magice/' + childkey ) ,{imageurl :image});
+            await sendMessage(whatsapp,walletName,TransactionType,TransactionPrice,TransactionCollection,image);
+          }else{
+          }
+
+        } else {
+          console.log("No data available");
+        }
+      }).catch((error) => {
+        console.error(error);
+      });
+      
+   
+}
 
 async function Mointoriamolo(){
     const db = getDatabase();
@@ -48,46 +102,15 @@ async function Mointoriamolo(){
               remove(ref(db, 'magice/' + childKey))
             }
             else{
-              console.log(d1)
-            try{
-              const url = `https://api-mainnet.magiceden.dev/v2/wallets/${childData.wallet_id}/activities?offset=0&limit=100`;
-                  const response = await axios.get(url);
-                  let  userdata_json1 = response
-                  let  token = userdata_json1.data[0]["tokenMint"]
-                  let  TransactionType = userdata_json1.data[0]["type"];
-                  let  TransactionCollection = userdata_json1.data[0]["collection"];
-                  let  TransactionPrice = userdata_json1.data[0]["price"];
-                  let  TransactionNFT = userdata_json1.data[0]["tokenMint"];
-                const tokens = `https://api.solscan.io/account?address=${token}`;
-                const resp = await axios.get(tokens);
-                const  res2 = resp.data.data.metadata.data.uri
-                const response33 = await axios.get(res2);
-                let name = response33.data.name
-                let image = response33.data.image
-                console.log(image)
-                await new Promise(resolve => setTimeout(resolve, 500));
-                if(childData.imageurl != image){              
-                  update(ref(db, 'magice/' + childKey ) ,{imageurl :image})
-                let phone = childData.whatsapp
-                const whatsapp = phone.replace(/\s+/g,"");
-                client.messages 
-      .create({ 
-         body: `Wallet :   ${childData.walletName}
-Activity Type:  ${TransactionType}
-Collection:   ${TransactionCollection}
-Price:    ${TransactionPrice}`,
-         from: 'whatsapp:+16184271719',       
-         to: `whatsapp:${whatsapp}`,
-         mediaUrl:image, 
-       }) 
-      .then(message => console.log(message.sid)) 
-      .done();
-            }}catch(e){
-                console.log(e)
+               await magiceEdenResponse(childData.wallet_id,childKey);  
             }
-          }   
           });
-        })
+        },
+        {
+        onlyOnce: true
+        }
+        
+        )
          
   }
   
